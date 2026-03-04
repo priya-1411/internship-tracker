@@ -11,13 +11,12 @@ import { toast } from 'sonner';
 import { Application, ApplicationStatus, Resume, ReminderPrefs } from '../types';
 import * as api from './api';
 
-// ── Types for our custom auth ─────────────────────────────────────────────────
-
 interface UserData {
   _id: string;
   id?: string;
   email: string;
   name: string;
+  role: 'user' | 'admin';
 }
 
 // ── Push helpers ──────────────────────────────────────────────────────────────
@@ -51,7 +50,7 @@ interface StoreContextType {
   token: string | null;
   authLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, role?: 'user' | 'admin') => Promise<void>;
   signOut: () => Promise<void>;
 
   // Applications
@@ -234,8 +233,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     autoCheckReminders(accessToken, prefs);
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
-    const data = await api.signUp(email, password, name);
+  const signUp = async (email: string, password: string, name: string, role: 'user' | 'admin' = 'user') => {
+    const data = await api.signUp(email, password, name, role);
     const accessToken = data.session.access_token;
     storeToken(accessToken);
     setToken(accessToken);

@@ -32,6 +32,8 @@ async function sendPushToUser(userId, payload) {
 // GET /api/applications
 router.get('/', auth, async (req, res) => {
     try {
+        // Users see their own, but we can allow admins to see everything or just their own for now.
+        // The user said "admin login we access the add application", implying admin manages the list.
         const apps = await Application.find({ userId: req.userId }).sort({ createdAt: -1 });
         res.json({ applications: apps });
     } catch (e) {
@@ -43,6 +45,9 @@ router.get('/', auth, async (req, res) => {
 // POST /api/applications
 router.post('/', auth, async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Permission denied. Admins only.' });
+        }
         const app = new Application({
             ...req.body,
             userId: req.userId,
@@ -58,6 +63,9 @@ router.post('/', auth, async (req, res) => {
 // PUT /api/applications/:id
 router.put('/:id', auth, async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Permission denied. Admins only.' });
+        }
         const existing = await Application.findOne({ _id: req.params.id, userId: req.userId });
         if (!existing) return res.status(404).json({ error: 'Not found' });
 
@@ -93,6 +101,9 @@ router.put('/:id', auth, async (req, res) => {
 // DELETE /api/applications/:id
 router.delete('/:id', auth, async (req, res) => {
     try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Permission denied. Admins only.' });
+        }
         const result = await Application.deleteOne({ _id: req.params.id, userId: req.userId });
         if (result.deletedCount === 0) return res.status(404).json({ error: 'Not found' });
         res.json({ success: true });

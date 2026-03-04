@@ -13,15 +13,18 @@ interface Props {
 }
 
 export function ApplicationCard({ application }: Props) {
-  const { deleteApplication } = useStore();
+  const { deleteApplication, user } = useStore();
   const [showEdit, setShowEdit] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  const isAdmin = user?.role === 'admin';
+
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'APPLICATION',
+    canDrag: () => isAdmin,
     item: { id: application.id, status: application.status },
     collect: monitor => ({ isDragging: monitor.isDragging() }),
-  }));
+  }), [isAdmin, application]);
 
   const score = calculateMatchScore(application);
   const days = getDaysSinceContact(application.lastContactDate);
@@ -39,10 +42,9 @@ export function ApplicationCard({ application }: Props) {
   return (
     <>
       <div
-        ref={drag as any}
-        className={`bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
-          isDragging ? 'opacity-40 scale-95' : 'opacity-100'
-        }`}
+        ref={isAdmin ? (drag as any) : null}
+        className={`bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all ${isAdmin ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isDragging ? 'opacity-40 scale-95' : 'opacity-100'
+          }`}
       >
         {/* Card Header */}
         <div className="p-4">
@@ -142,9 +144,8 @@ export function ApplicationCard({ application }: Props) {
                     return (
                       <span
                         key={skill}
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          isMatch ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                        }`}
+                        className={`text-xs px-2 py-0.5 rounded-full ${isMatch ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                          }`}
                       >
                         {skill}
                       </span>
@@ -173,24 +174,26 @@ export function ApplicationCard({ application }: Props) {
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             {expanded ? 'Less' : 'Details'}
           </button>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowEdit(true)}
-              className="p-1.5 hover:bg-indigo-50 hover:text-indigo-600 text-gray-400 rounded-lg transition-colors"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => {
-                if (window.confirm(`Remove ${application.company} from tracker?`)) {
-                  deleteApplication(application.id);
-                }
-              }}
-              className="p-1.5 hover:bg-red-50 hover:text-red-500 text-gray-400 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowEdit(true)}
+                className="p-1.5 hover:bg-indigo-50 hover:text-indigo-600 text-gray-400 rounded-lg transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm(`Remove ${application.company} from tracker?`)) {
+                    deleteApplication(application.id);
+                  }
+                }}
+                className="p-1.5 hover:bg-red-50 hover:text-red-500 text-gray-400 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

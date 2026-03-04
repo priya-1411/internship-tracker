@@ -17,19 +17,22 @@ function KanbanColumn({
   status: ApplicationStatus;
   onAddClick: (status: ApplicationStatus) => void;
 }) {
-  const { applications, updateStatus } = useStore();
+  const { applications, updateStatus, user } = useStore();
   const config = STATUS_CONFIG[status];
   const cards = applications.filter(a => a.status === status);
 
+  const isAdmin = user?.role === 'admin';
+
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'APPLICATION',
+    canDrop: () => isAdmin,
     drop: (item: { id: string; status: string }) => {
-      if (item.status !== status) {
+      if (isAdmin && item.status !== status) {
         updateStatus(item.id, status);
       }
     },
     collect: monitor => ({ isOver: monitor.isOver() }),
-  }));
+  }), [isAdmin, status, updateStatus]);
 
   return (
     <div className="flex flex-col w-72 flex-shrink-0">
@@ -42,20 +45,21 @@ function KanbanColumn({
             {cards.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddClick(status)}
-          className={`p-1 rounded-lg hover:bg-white/60 transition-colors ${config.color}`}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => onAddClick(status)}
+            className={`p-1 rounded-lg hover:bg-white/60 transition-colors ${config.color}`}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Drop Zone */}
       <div
         ref={drop as any}
-        className={`flex-1 space-y-3 min-h-[200px] rounded-xl p-2 transition-colors ${
-          isOver ? `${config.bg} border-2 border-dashed ${config.border}` : 'bg-transparent'
-        }`}
+        className={`flex-1 space-y-3 min-h-[200px] rounded-xl p-2 transition-colors ${isOver ? `${config.bg} border-2 border-dashed ${config.border}` : 'bg-transparent'
+          }`}
       >
         {cards.map(app => (
           <ApplicationCard key={app.id} application={app} />
@@ -72,16 +76,19 @@ function KanbanColumn({
 }
 
 export function KanbanBoard() {
-  const { applications, dataLoading, refreshApplications } = useStore();
+  const { applications, dataLoading, refreshApplications, user } = useStore();
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [defaultStatus, setDefaultStatus] = useState<ApplicationStatus>('to-apply');
+
+  const isAdmin = user?.role === 'admin';
 
   const totalApps = applications.length;
   const offerCount = applications.filter(a => a.status === 'offer').length;
   const interviewCount = applications.filter(a => a.status === 'interviewing').length;
 
   const handleAddClick = (status: ApplicationStatus) => {
+    if (!isAdmin) return;
     setDefaultStatus(status);
     setShowModal(true);
   };
@@ -94,15 +101,22 @@ export function KanbanBoard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Kanban Board</h1>
-              <p className="text-sm text-gray-500 mt-0.5">Drag cards between columns to update status</p>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {isAdmin
+                  ? 'Drag cards between columns to update status'
+                  : 'View your internship applications and status'
+                }
+              </p>
             </div>
-            <button
-              onClick={() => { setDefaultStatus('to-apply'); setShowModal(true); }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add Application
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => { setDefaultStatus('to-apply'); setShowModal(true); }}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Application
+              </button>
+            )}
           </div>
 
           {/* Stats Row */}

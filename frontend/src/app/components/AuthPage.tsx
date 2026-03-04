@@ -20,6 +20,7 @@ export function AuthPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'user' | 'admin'>('user');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export function AuthPage() {
       if (mode === 'login') {
         await signIn(email, password);
       } else {
-        await signUp(email, password, name);
+        await signUp(email, password, name, role);
       }
     } catch (err) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
@@ -133,21 +134,19 @@ export function AuthPage() {
           <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
             <button
               onClick={() => switchMode('login')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                mode === 'login'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'login'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               Sign In
             </button>
             <button
               onClick={() => switchMode('signup')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                mode === 'signup'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'signup'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               Create Account
             </button>
@@ -217,6 +216,21 @@ export function AuthPage() {
                 </button>
               </div>
             </div>
+
+            {mode === 'signup' && (
+              <div className="flex items-center gap-2 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="admin-role"
+                  checked={role === 'admin'}
+                  onChange={e => setRole(e.target.checked ? 'admin' : 'user')}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                />
+                <label htmlFor="admin-role" className="text-sm font-medium text-indigo-900 cursor-pointer">
+                  Request Admin Access
+                </label>
+              </div>
+            )}
 
             <button
               type="submit"

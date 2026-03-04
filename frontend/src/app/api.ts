@@ -27,8 +27,8 @@ async function request<T>(
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-export async function signUp(email: string, password: string, name: string) {
-  return request<{ user: unknown; token: string; session: { access_token: string } }>('POST', '/signup', { email, password, name });
+export async function signUp(email: string, password: string, name: string, role: string = 'user') {
+  return request<{ user: unknown; token: string; session: { access_token: string } }>('POST', '/signup', { email, password, name, role });
 }
 
 export async function signIn(email: string, password: string) {

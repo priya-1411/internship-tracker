@@ -12,7 +12,7 @@ function generateToken(userId) {
 // POST /api/signup
 router.post('/signup', async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { email, password, name, role } = req.body;
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password required' });
         }
@@ -27,6 +27,7 @@ router.post('/signup', async (req, res) => {
             email,
             password,
             name: name || email.split('@')[0],
+            role: role || 'user',
         });
         await user.save();
 
